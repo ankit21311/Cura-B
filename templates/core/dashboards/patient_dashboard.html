@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="dashboard-carousel">
+    <button class="carousel-nav carousel-nav-prev" onclick="prevSlide()" aria-label="Previous slide">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="carousel-nav carousel-nav-next" onclick="nextSlide()" aria-label="Next slide">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <div class="carousel-slides">
+        <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=1400&q=85');">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <span class="carousel-tag">Trusted Care</span>
+                <h2>Expert Doctors</h2>
+                <p>Book appointments with top specialists. Your health deserves the best.</p>
+                <a href="{% url 'doctor_search' %}" class="btn btn-primary">Find a Doctor</a>
+            </div>
+        </div>
+        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1400&q=85');">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <span class="carousel-tag">Home Delivery</span>
+                <h2>Online Pharmacy</h2>
+                <p>Order medicines and get them delivered to your doorstep.</p>
+                <a href="{% url 'medicine_search' %}" class="btn btn-primary">Order Now</a>
+            </div>
+        </div>
+        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1400&q=85');">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <span class="carousel-tag">Round the Clock</span>
+                <h2>24/7 Emergency</h2>
+                <p>Immediate ambulance and emergency services available.</p>
+                <a href="tel:102" class="btn btn-danger">Call Ambulance</a>
+            </div>
+        </div>
+        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1400&q=85');">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <span class="carousel-tag">Real-time Availability</span>
+                <h2>Hospital Beds</h2>
+                <p>Check bed availability and book instantly across partner hospitals.</p>
+                <a href="{% url 'hospital_list' %}" class="btn btn-primary">View Availability</a>
+            </div>
+        </div>
+    </div>
+    <div class="carousel-indicators">
+        <span class="indicator active" onclick="jumpToSlide(0)" aria-label="Slide 1"></span>
+        <span class="indicator" onclick="jumpToSlide(1)" aria-label="Slide 2"></span>
+        <span class="indicator" onclick="jumpToSlide(2)" aria-label="Slide 3"></span>
+        <span class="indicator" onclick="jumpToSlide(3)" aria-label="Slide 4"></span>
+    </div>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.carousel-slide');
+    const indicators = document.querySelectorAll('.indicator');
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active');
+            indicators[i].classList.remove('active');
+            if (i === index) {
+                slide.classList.add('active');
+                indicators[i].classList.add('active');
+            }
+        });
+        currentSlide = index;
+    }
+
+    function nextSlide() {
+        let next = (currentSlide + 1) % slides.length;
+        showSlide(next);
+    }
+
+    function prevSlide() {
+        let prev = (currentSlide - 1 + slides.length) % slides.length;
+        showSlide(prev);
+    }
+
+    function jumpToSlide(index) {
+        showSlide(index);
+        // Reset timer could be added here
+    }
+
+    setInterval(nextSlide, 5000); // Change every 5 seconds
+</script>
+
+<div class="kpi-grid">
+    <a href="{% url 'purchase_history' %}?type=appointment" class="kpi-card"
+        style="text-decoration: none; color: inherit;">
+        <div class="kpi-label">Appointments</div>
+        <div class="kpi-value">{% if appointments %}{{ appointments|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Upcoming snapshot</div>
+        {% if appointments %}
+        <div class="kpi-meta kpi-meta-secondary">
+            Next: {% if appointments.0.doctor.name|slice:":2" == "Dr" %}{{ appointments.0.doctor.name }}{% else %}Dr. {{ appointments.0.doctor.name }}{% endif %} on {{ appointments.0.date }}
+        </div>
+        {% endif %}
+    </a>
+    <a href="{% url 'purchase_history' %}?type=medicine" class="kpi-card"
+        style="text-decoration: none; color: inherit;">
+        <div class="kpi-label">Medicine orders</div>
+        <div class="kpi-value">{% if medicine_orders %}{{ medicine_orders|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Recent orders</div>
+        {% if medicine_orders %}
+        <div class="kpi-meta kpi-meta-secondary">
+            Last: #{{ medicine_orders.0.id }} from {{ medicine_orders.0.pharmacy.name }}
+        </div>
+        {% endif %}
+    </a>
+    <a href="{% url 'purchase_history' %}?type=oxygen" class="kpi-card" style="text-decoration: none; color: inherit;">
+        <div class="kpi-label">Oxygen bookings</div>
+        <div class="kpi-value">{% if oxygen_bookings %}{{ oxygen_bookings|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Recent bookings</div>
+        {% if oxygen_bookings %}
+        <div class="kpi-meta kpi-meta-secondary">
+            Latest: {{ oxygen_bookings.0.stock.supplier.name }} on {{ oxygen_bookings.0.scheduled_date }}
+        </div>
+        {% endif %}
+    </a>
+    <a href="{% url 'purchase_history' %}?type=bed" class="kpi-card" style="text-decoration: none; color: inherit;">
+        <div class="kpi-label">Bed Bookings</div>
+        <div class="kpi-value">{% if bed_bookings %}{{ bed_bookings|length }}{% else %}0{% endif %}</div>
+        <div class="kpi-meta">Hospital beds</div>
+        {% if bed_bookings %}
+        <div class="kpi-meta kpi-meta-secondary">
+            Recent: {{ bed_bookings.0.hospital_bed.hospital.name }} on {{ bed_bookings.0.booking_date }}
+        </div>
+        {% endif %}
+    </a>
+    <div class="kpi-card">
+        <div class="kpi-label">Support</div>
+        <div class="kpi-value">24/7</div>
+        <div class="kpi-meta"><a class="emergency-call" href="{% url 'support_request_create' %}">Create request</a>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">
+    <section class="dash-card" style="flex: 1 1 300px;">
+        <div class="dash-card-header">
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/doctor-avatar.svg' %}" alt="Doctors"></div>
+                <h3>Upcoming appointments</h3>
+            </div>
+            <span class="pill-status">
+                {% if appointments %}{{ appointments|length }} scheduled{% else %}None yet{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for a in appointments %}
+            <li>
+                <span class="dash-list-main">{% if a.doctor.name|slice:":2" == "Dr" %}{{ a.doctor.name }}{% else %}Dr. {{ a.doctor.name }}{% endif %} • {{ a.date }} {{ a.time_slot }}</span>
+                <span class="dash-list-meta">{{ a.status }}</span>
+            </li>
+            {% empty %}
+            <li class="dash-empty">No upcoming appointments. Book one now from the quick actions above.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="dash-card" style="flex: 1 1 300px;">
+        <div class="dash-card-header">
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/medicine-pill.svg' %}" alt="Medicines"></div>
+                <h3>Recent medicine orders</h3>
+            </div>
+            <span class="pill-status">
+                {% if medicine_orders %}{{ medicine_orders|length }} recent{% else %}No orders{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for o in medicine_orders %}
+            <li>
+                <span class="dash-list-main">Order #{{ o.id }} • {{ o.pharmacy.name }}</span>
+                <span class="dash-list-meta">{{ o.status }}</span>
+            </li>
+            {% empty %}
+            <li class="dash-empty">You haven’t placed any medicine orders yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="dash-card" style="flex: 1 1 100%; width: 100%;">
+        <div class="dash-card-header">
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/oxygen-tank.svg' %}" alt="Oxygen"></div>
+                <h3>Oxygen bookings</h3>
+            </div>
+            <span class="pill-status">
+                {% if oxygen_bookings %}{{ oxygen_bookings|length }} recent{% else %}No bookings{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for b in oxygen_bookings %}
+            <li class="dash-list-item">
+                <div class="dash-item-content">
+                    <div class="dash-item-row">
+                        <span class="dash-item-title">
+                            Booking #{{ b.id }} • {{ b.stock.supplier.name }}
+                            <small class="text-muted">({{ b.stock.capacity_litres }}L)</small>
+                        </span>
+                        <span
+                            class="badge {% if b.status == 'CONFIRMED' %}badge-success{% elif b.status == 'PENDING' %}badge-warning{% else %}badge-danger{% endif %}">{{ b.get_status_display }}</span>
+                    </div>
+                    <div class="dash-item-row">
+                        <span class="dash-item-subtitle">{{ b.scheduled_date }} {% if b.time_slot %}at {{ b.time_slot }}{% endif %}</span>
+                        <span class="dash-item-meta">{{ b.get_payment_option_display }} • ₹{{ b.stock.price_per_cylinder }}</span>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="dash-empty">No oxygen bookings yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="dash-card" style="flex: 1 1 100%; width: 100%;">
+        <div class="dash-card-header">
+            <div class="media">
+                <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Beds"></div>
+                <h3>Bed bookings</h3>
+            </div>
+            <span class="pill-status">
+                {% if bed_bookings %}{{ bed_bookings|length }} recent{% else %}No bookings{% endif %}
+            </span>
+        </div>
+        <ul class="dash-list">
+            {% for b in bed_bookings %}
+            <li class="dash-list-item">
+                <div class="dash-item-content">
+                    <div class="dash-item-row">
+                        <span class="dash-item-title">{{ b.hospital_bed.get_bed_type_display }} • {{ b.hospital_bed.hospital.name }}</span>
+                        <span
+                            class="badge {% if b.status == 'CONFIRMED' %}badge-success{% elif b.status == 'PENDING' %}badge-warning{% else %}badge-info{% endif %}">{{ b.get_status_display }}</span>
+                    </div>
+                    <div class="dash-item-row">
+                        <span class="dash-item-subtitle">{{ b.booking_date }} at {{ b.time_slot }}</span>
+                        <span class="dash-item-meta">{{ b.get_payment_option_display }}</span>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="dash-empty">No bed bookings yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+
+<section class="dash-card dash-notifications">
+    <div class="dash-card-header">
+        <div class="media">
+            <div class="avatar"><img src="{% static 'img/hospital-building.svg' %}" alt="Updates"></div>
+            <h3>Recent notifications</h3>
+        </div>
+        <a class="btn btn-small btn-outline" href="{% url 'notifications_list' %}">View all</a>
+    </div>
+    <ul class="dash-list">
+        {% for n in notifications %}
+        <li class="dash-list-item {% if not n.is_read %}dash-unread{% endif %}">
+            <div class="dash-item-content">
+                <span class="dash-item-title">{{ n.message }}</span>
+                <span class="dash-item-meta">{{ n.created_at|date:"d M Y H:i" }}</span>
+            </div>
+        </li>
+        {% empty %}
+        <li class="dash-empty">You’ll see appointment reminders, booking updates and more here.</li>
+        {% endfor %}
+    </ul>
+</section>
+
+<style>
+    /* Enhanced Dashboard List Styles */
+    .dash-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .dash-list-item {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dash-list-item:last-child {
+        border-bottom: none;
+    }
+
+    .dash-list-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .dash-item-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .dash-item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .dash-item-title {
+        font-weight: 600;
+        color: var(--text-color, inherit);
+        font-size: 0.95rem;
+    }
+
+    .dash-item-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted, #64748b);
+        opacity: 0.9;
+    }
+
+    .dash-item-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted, #94a3b8);
+        opacity: 0.8;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .badge-success {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-warning {
+        background-color: #fef9c3;
+        color: #854d0e;
+    }
+
+    .badge-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-info {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+</style>
+
+<section class="card card-hero" style="margin-top:14px;">
+    <div class="card-header">
+        <h3>Need help navigating CURA?</h3>
+        <span class="pill-status">Assistant</span>
+    </div>
+    <div class="card-muted">
+        Use the <strong>Help</strong> button (bottom-right) to ask questions, see live stats, and learn how each feature
+        works.
+    </div>
+    <div class="resource-actions" style="margin-top:12px;">
+        <a class="btn btn-primary" href="{% url 'assistant_home' %}">Open CURA Assistant</a>
+        <a class="btn btn-outline" href="{% url 'emergency_contacts' %}">Emergency contacts</a>
+    </div>
+</section>
+{% endblock %}

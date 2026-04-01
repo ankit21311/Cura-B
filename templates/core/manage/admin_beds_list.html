@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="manage-container">
+    <div class="manage-header">
+        <h1>Manage Hospital Beds (Admin)</h1>
+        <a href="{% url 'admin_add_bed' %}" class="btn btn-primary">Add New Bed Entry</a>
+    </div>
+
+    <div class="card">
+        {% if beds %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Hospital</th>
+                    <th>Bed Type</th>
+                    <th>Total</th>
+                    <th>Available</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bed in beds %}
+                <tr>
+                    <td>
+                        <strong>{{ bed.hospital.name }}</strong><br>
+                        <small>{{ bed.hospital.city }}</small>
+                    </td>
+                    <td>{{ bed.get_bed_type_display }}</td>
+                    <td>{{ bed.total_beds }}</td>
+                    <td>
+                        <span
+                            class="badge {% if bed.available_beds > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ bed.available_beds }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_edit_bed_admin' bed.id %}" class="btn btn-sm btn-outline">Edit</a>
+                        <a href="{% url 'admin_delete_bed' bed.id %}" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No hospital beds found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

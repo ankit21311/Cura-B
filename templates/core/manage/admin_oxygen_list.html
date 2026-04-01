@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="manage-container">
+    <div class="manage-header">
+        <h1>Manage Oxygen (Admin)</h1>
+        <a href="{% url 'admin_add_oxygen' %}" class="btn btn-primary">Add New Stock</a>
+    </div>
+
+    <div class="card">
+        {% if stocks %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Capacity</th>
+                    <th>Price</th>
+                    <th>Available</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <td>
+                        <strong>{{ stock.supplier.name }}</strong><br>
+                        <small>{{ stock.supplier.city }}</small>
+                    </td>
+                    <td>{{ stock.capacity_litres }} L</td>
+                    <td>₹{{ stock.price_per_cylinder }}</td>
+                    <td>
+                        <span class="badge {% if stock.available_cylinders > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ stock.available_cylinders }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_edit_oxygen_stock' stock.id %}" class="btn btn-sm btn-outline">Edit</a>
+                        <a href="{% url 'admin_delete_oxygen_stock' stock.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No oxygen stocks found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

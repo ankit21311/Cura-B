@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="emergency-hero">
+    <div class="emergency-hero-main">
+        <div class="emergency-tag">Emergency • Act fast • Stay calm</div>
+        <h2 class="emergency-title">Emergency help &amp; critical contacts</h2>
+        <p class="emergency-subtitle">
+            If someone is in immediate danger, call the official numbers first. Then use CURA support to track and coordinate help.
+        </p>
+        <div class="emergency-cta">
+            <a href="{% url 'support_request_create' %}" class="btn btn-primary">Submit emergency support request</a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to dashboard</a>
+        </div>
+        <div class="emergency-note">
+            Tip: On mobile, tap a number to call.
+        </div>
+    </div>
+    <div class="emergency-hero-visual">
+        <div class="dashboard-carousel emergency-carousel" aria-label="Emergency quick guidance carousel">
+            <button class="carousel-nav carousel-nav-prev" type="button" data-dir="-1" aria-label="Previous slide">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+            </button>
+            <button class="carousel-nav carousel-nav-next" type="button" data-dir="1" aria-label="Next slide">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6" />
+                </svg>
+            </button>
+
+            <div class="carousel-slides">
+                <div class="carousel-slide active"
+                    style="background-image:url('https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1400&q=85');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-content">
+                        <span class="carousel-tag">Fast Response</span>
+                        <h2>Call 112</h2>
+                        <p>National emergency number for immediate help.</p>
+                        <a class="btn btn-danger" href="tel:112">Call now</a>
+                    </div>
+                </div>
+
+                <div class="carousel-slide"
+                    style="background-image:url('https://images.unsplash.com/photo-1582719508461-905c673771fd?w=1400&q=85');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-content">
+                        <span class="carousel-tag">Ambulance</span>
+                        <h2>102 / 108</h2>
+                        <p>Medical transport and dispatch support.</p>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <a class="btn btn-danger" href="tel:102">Call 102</a>
+                            <a class="btn btn-outline" href="tel:108">Call 108</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-slide"
+                    style="background-image:url('https://images.unsplash.com/photo-1580281658628-48b3f544704a?w=1400&q=85');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-content">
+                        <span class="carousel-tag">Stay Calm</span>
+                        <h2>First-aid checklist</h2>
+                        <p>Airway, bleeding control, and safe positioning—do the basics first.</p>
+                        <a class="btn btn-primary" href="#emergencySteps">View steps</a>
+                    </div>
+                </div>
+
+                <div class="carousel-slide"
+                    style="background-image:url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1400&q=85');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-content">
+                        <span class="carousel-tag">Coordinate</span>
+                        <h2>Find beds faster</h2>
+                        <p>Check availability and coordinate resources via CURA.</p>
+                        <a class="btn btn-primary" href="{% url 'hospital_list' %}">Hospital beds</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="carousel-indicators" aria-label="Emergency carousel indicators">
+                <span class="indicator active" role="button" tabindex="0" aria-label="Slide 1"></span>
+                <span class="indicator" role="button" tabindex="0" aria-label="Slide 2"></span>
+                <span class="indicator" role="button" tabindex="0" aria-label="Slide 3"></span>
+                <span class="indicator" role="button" tabindex="0" aria-label="Slide 4"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const root = document.querySelector(".emergency-carousel");
+        if (!root) return;
+
+        const slides = Array.from(root.querySelectorAll(".carousel-slide"));
+        const indicators = Array.from(root.querySelectorAll(".indicator"));
+        const prevBtn = root.querySelector(".carousel-nav-prev");
+        const nextBtn = root.querySelector(".carousel-nav-next");
+        if (slides.length === 0) return;
+
+        let current = 0;
+        let timer = null;
+
+        const show = (idx) => {
+            const next = ((idx % slides.length) + slides.length) % slides.length;
+            slides.forEach((s, i) => s.classList.toggle("active", i === next));
+            indicators.forEach((d, i) => d.classList.toggle("active", i === next));
+            current = next;
+        };
+
+        const start = () => {
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => show(current + 1), 6000);
+        };
+
+        prevBtn?.addEventListener("click", () => { show(current - 1); start(); });
+        nextBtn?.addEventListener("click", () => { show(current + 1); start(); });
+
+        indicators.forEach((dot, i) => {
+            dot.addEventListener("click", () => { show(i); start(); });
+            dot.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(i); start(); }
+            });
+        });
+
+        start();
+    });
+</script>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">National emergency</div>
+        <div class="kpi-value"><a class="emergency-call" href="tel:112">112</a></div>
+        <div class="kpi-meta">Single number for urgent situations</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Ambulance</div>
+        <div class="kpi-value">
+            <a class="emergency-call" href="tel:102">102</a>
+            <span class="emergency-sep">/</span>
+            <a class="emergency-call" href="tel:108">108</a>
+        </div>
+        <div class="kpi-meta">Medical transport &amp; dispatch</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Fire</div>
+        <div class="kpi-value"><a class="emergency-call" href="tel:101">101</a></div>
+        <div class="kpi-meta">Fire, smoke, hazardous risk</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Police</div>
+        <div class="kpi-value"><a class="emergency-call" href="tel:100">100</a></div>
+        <div class="kpi-meta">Threats, safety, enforcement</div>
+    </div>
+</div>
+
+<div class="emergency-grid">
+    <section class="card">
+        <div class="card-header">
+            <h3>What to do right now</h3>
+            <span class="pill-status">Checklist</span>
+        </div>
+        <ol class="emergency-steps" id="emergencySteps">
+            <li><strong>Call 112 / 108</strong> if there’s immediate danger or severe symptoms.</li>
+            <li><strong>Share location clearly</strong>: landmark, address, nearest hospital.</li>
+            <li><strong>Basic first aid</strong>: keep airway clear, stop bleeding with pressure, do not move spinal injury.</li>
+            <li><strong>Use CURA</strong>: submit a support request for coordination and updates.</li>
+        </ol>
+        <div class="emergency-actions">
+            <a class="btn btn-outline" href="{% url 'hospital_list' %}">Find nearby hospital beds</a>
+            <a class="btn btn-outline" href="{% url 'doctor_search' %}">Find a doctor</a>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>When to use CURA support</h3>
+            <span class="pill-status">Guidance</span>
+        </div>
+        <div class="emergency-callouts">
+            <div class="emergency-callout">
+                <div class="emergency-callout-title">Non-immediate but urgent</div>
+                <div class="card-muted">Shortness of breath, high fever, worsening pain — after calling ambulance if needed.</div>
+            </div>
+            <div class="emergency-callout">
+                <div class="emergency-callout-title">Resource coordination</div>
+                <div class="card-muted">Need beds/oxygen/medicines fast? CURA helps you search and request support.</div>
+            </div>
+            <div class="emergency-callout">
+                <div class="emergency-callout-title">Updates &amp; tracking</div>
+                <div class="card-muted">CURA notifications keep your requests visible and organized.</div>
+            </div>
+        </div>
+        <div style="margin-top:12px;">
+            <a href="{% url 'support_request_create' %}" class="btn btn-primary">Create support request</a>
+        </div>
+    </section>
+</div>
+
+<section class="card" style="margin-top:14px;">
+    <div class="card-header">
+        <h3>Quick safety tips</h3>
+        <span class="pill-status">Read</span>
+    </div>
+    <div class="emergency-tips">
+        <details class="emergency-tip">
+            <summary>Chest pain or breathing issues</summary>
+            <div class="card-muted">Call ambulance. Sit upright, loosen tight clothing, avoid exertion.</div>
+        </details>
+        <details class="emergency-tip">
+            <summary>Bleeding / injury</summary>
+            <div class="card-muted">Apply direct pressure, elevate if possible, keep the person warm.</div>
+        </details>
+        <details class="emergency-tip">
+            <summary>High fever / dehydration</summary>
+            <div class="card-muted">Provide fluids if conscious, use cool compress, seek care if symptoms worsen.</div>
+        </details>
+    </div>
+</section>
+{% endblock %}
+

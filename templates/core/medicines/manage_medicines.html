@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Manage Medicines</h1>
+
+<div style="margin-bottom: 16px">
+    <a href="{% url 'add_medicine' %}" class="btn btn-primary"> + Add Medicine </a>
+</div>
+
+<div class="glass-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Brand</th>
+                <th>Form</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for medicine in medicines %}
+            <tr>
+                <td>{{ medicine.name }}</td>
+                <td>{{ medicine.brand }}</td>
+                <td>{{ medicine.form }}</td>
+                <td>₹{{ medicine.price }}</td>
+                <td>{{ medicine.stock }}</td>
+                <td>
+                    <a href="{% url 'delete_medicine' medicine.id %}" style="color: var(--danger);"
+                        onclick="return confirm('Are you sure?')">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No medicines added yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

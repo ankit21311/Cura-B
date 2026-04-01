@@ -1,0 +1,461 @@
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
+
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('PATIENT', 'Patient'),
+        ('HOSPITAL_ADMIN', 'Hospital Admin'),
+        ('PHARMACY_ADMIN', 'Pharmacy Admin'),
+        ('OXYGEN_SUPPLIER', 'Oxygen Supplier'),
+        ('ADMIN', 'Platform Admin'),
+    ]
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='PATIENT')
+    phone = models.CharField(max_length=20, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return f'{self.user.username} ({self.role})'
+
+
+class Hospital(models.Model):
+    name = models.CharField(max_length=255)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    hospital_type = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="e.g. Multispeciality, Cardiac Center, Children’s Hospital",
+    )
+    established_year = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Year the hospital was established",
+    )
+    website = models.URLField(blank=True)
+    image_url = models.URLField(
+        blank=True,
+        help_text="Optional hero/cover image shown on the hospital detail page",
+    )
+    rating = models.DecimalField(max_digits=2, decimal_places=1, default=3.0)
+    contact_phone = models.CharField(max_length=20)
+    emergency_contact = models.CharField(max_length=20)
+    support_24_7 = models.BooleanField(default=True)
+    specialties_offered = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Comma-separated list of key specialties (Cardiology, Neurology, etc.)",
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class HospitalBed(models.Model):
+    BED_TYPE_CHOICES = [
+        ('ICU', 'Deluxe Bed'),
+        ('GENERAL', 'General'),
+        ('EMERGENCY', 'Emergency'),
+    ]
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='beds')
+    bed_type = models.CharField(max_length=20, choices=BED_TYPE_CHOICES)
+    total_beds = models.PositiveIntegerField()
+    available_beds = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'{self.hospital.name} - {self.bed_type}'
+
+
+class Doctor(models.Model):
+    SPECIALITY_CHOICES = [
+        ('Cardiology', 'Cardiology'),
+        ('Neurology', 'Neurology'),
+        ('Orthopedics', 'Orthopedics'),
+        ('General', 'General Physician'),
+    ]
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='doctors')
+    name = models.CharField(max_length=255)
+    speciality = models.CharField(max_length=100, choices=SPECIALITY_CHOICES)
+    experience_years = models.PositiveIntegerField()
+    fees = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='Fees of doctor')
+    qualification = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="e.g. MBBS, MD (Cardiology)",
+    )
+    rating = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        default=4.5,
+        help_text="Average patient rating out of 5",
+    )
+    available_from = models.TimeField()
+    available_to = models.TimeField()
+    languages_spoken = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f'{self.name} - {self.speciality}'
+
+
+class Appointment(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('CONFIRMED', 'Confirmed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    PAYMENT_CHOICES = [
+        ('CASH', 'Pay at Clinic'),
+        ('INSURANCE', 'Insurance / TPA'),
+        ('WALLET', 'Pay with Wallet'),
+    ]
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='appointments')
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
+    date = models.DateField()
+    time_slot = models.TimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    payment_option = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='CASH')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Appointment with {self.doctor} on {self.date}'
+
+
+class OxygenSupplier(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='oxygen_supplier')
+    name = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    contact_phone = models.CharField(max_length=20)
+    delivery_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class OxygenCylinderStock(models.Model):
+    supplier = models.ForeignKey(OxygenSupplier, on_delete=models.CASCADE, related_name='stocks')
+    capacity_litres = models.PositiveIntegerField()
+    price_per_cylinder = models.DecimalField(max_digits=8, decimal_places=2)
+    available_cylinders = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'{self.supplier.name} - {self.capacity_litres}L'
+
+
+class OxygenBooking(models.Model):
+    PAYMENT_CHOICES = [
+        ('CASH', 'Pay at Hospital'),
+        ('INSURANCE', 'Insurance / TPA'),
+        ('WALLET', 'Pay with Wallet'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('CONFIRMED', 'Confirmed'),
+        ('DELIVERED', 'Delivered'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='oxygen_bookings')
+    stock = models.ForeignKey(OxygenCylinderStock, on_delete=models.CASCADE, related_name='bookings')
+    quantity = models.PositiveIntegerField()
+    delivery_address = models.TextField()
+    scheduled_date = models.DateField()
+    time_slot = models.TimeField(help_text="Expected delivery/pickup time", null=True, blank=True)
+    payment_option = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='CASH')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Oxygen Booking #{self.id} for {self.patient.username} - {self.stock.capacity_litres}L from {self.stock.supplier.name}'
+
+
+class Pharmacy(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pharmacy')
+    name = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    address = models.TextField()
+    contact_phone = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.name
+
+
+class Medicine(models.Model):
+    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name='medicines')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    brand = models.CharField(max_length=255, blank=True)
+    form = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="e.g. Tablet, Syrup, Injection",
+    )
+    strength = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="e.g. 500 mg, 5 mg/ml",
+    )
+    pack_size = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of units (e.g. tablets) per pack",
+    )
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    stock = models.PositiveIntegerField()
+    is_essential = models.BooleanField(default=True)
+    image_url = models.URLField(
+        blank=True,
+        help_text="Optional image for advanced medicine cards",
+    )
+
+    def __str__(self):
+        return f'{self.name} ({self.pharmacy.name})'
+
+
+class MedicineOrder(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('CONFIRMED', 'Confirmed'),
+        ('DISPATCHED', 'Dispatched'),
+        ('DELIVERED', 'Delivered'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='medicine_orders')
+    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name='orders')
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    contact_phone = models.CharField(max_length=20, blank=True)
+    shipping_address = models.TextField(blank=True)
+
+    def __str__(self):
+        return f'Medicine order #{self.id}'
+
+
+class MedicineOrderItem(models.Model):
+    order = models.ForeignKey(MedicineOrder, on_delete=models.CASCADE, related_name='items')
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    price_at_order = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.medicine.name} x {self.quantity}'
+
+
+class Cart(models.Model):
+    """
+    Lightweight e‑commerce cart for medicine packs.
+    Tied to an authenticated user; items are converted into MedicineOrder
+    records on checkout.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='carts',
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'Cart #{self.id} for {self.user.username}'
+
+    def total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+    def total_price(self):
+        return sum(item.subtotal for item in self.items.select_related('medicine'))
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ('cart', 'medicine')
+
+    def __str__(self):
+        return f'{self.medicine.name} x {self.quantity} (cart #{self.cart_id})'
+
+    @property
+    def subtotal(self):
+        return self.quantity * self.medicine.price
+
+
+class SupportRequest(models.Model):
+    STATUS_CHOICES = [
+        ('OPEN', 'Open'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('RESOLVED', 'Resolved'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=255)
+    contact = models.CharField(max_length=50, blank=True)
+    subject = models.CharField(max_length=255)
+    description = models.TextField()
+    is_emergency = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.subject
+
+
+class Notification(models.Model):
+    NOTIFICATION_TYPE_CHOICES = [
+        ('BED', 'Bed Availability'),
+        ('MEDICINE', 'Medicine Restock'),
+        ('OXYGEN', 'Oxygen Restock'),
+        ('APPOINTMENT', 'Appointment Reminder'),
+        ('SUPPORT', 'Support Update'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPE_CHOICES)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Notification for {self.user.username}'
+
+
+class BedBooking(models.Model):
+    PAYMENT_CHOICES = [
+        ('CASH', 'Cash at Hospital'),
+        ('INSURANCE', 'Insurance / TPA'),
+        ('WALLET', 'Pay with Wallet'),
+    ]
+    STATUS_CHOICES = [
+        ('AWAITING_PAYMENT', 'Awaiting Payment'),
+        ('PENDING', 'Pending Admin Approval'),
+        ('CONFIRMED', 'Confirmed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bed_bookings')
+    hospital_bed = models.ForeignKey(HospitalBed, on_delete=models.CASCADE, related_name='bookings')
+    booking_date = models.DateField()
+    time_slot = models.TimeField(help_text="Expected arrival time")
+    payment_option = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='CASH')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='AWAITING_PAYMENT')
+    prescription = models.FileField(upload_to='prescriptions/', blank=True, null=True, help_text="Doctor prescription (PDF/JPG/PNG, Max 5MB)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Bed Booking #{self.id} for {self.patient.username} at {self.hospital_bed.hospital.name}'
+
+import uuid
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+class Wallet(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    currency = models.CharField(max_length=3, default='INR')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Wallet ({self.currency} {self.balance})"
+
+    def credit(self, amount, reference_id=None, content_object=None):
+        if amount <= 0:
+            raise ValueError("Credit amount must be positive")
+        self.balance += amount
+        self.save()
+        Transaction.objects.create(
+            wallet=self,
+            amount=amount,
+            transaction_type='CREDIT',
+            status='SUCCESS',
+            reference_id=reference_id or uuid.uuid4(),
+            content_object=content_object
+        )
+
+    def debit(self, amount, reference_id=None, content_object=None):
+        if amount <= 0:
+            raise ValueError("Debit amount must be positive")
+        if self.balance < amount:
+            return False
+        self.balance -= amount
+        self.save()
+        Transaction.objects.create(
+            wallet=self,
+            amount=amount,
+            transaction_type='DEBIT',
+            status='SUCCESS',
+            reference_id=reference_id or uuid.uuid4(),
+            content_object=content_object
+        )
+        return True
+
+    def can_transact(self, amount):
+        return self.balance >= amount
+
+
+class Transaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('CREDIT', 'Credit'),
+        ('DEBIT', 'Debit'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('SUCCESS', 'Success'),
+        ('FAILED', 'Failed'),
+    ]
+    
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    reference_id = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Generic relation to link transaction to Booking/Order
+    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.transaction_type} of {self.amount} - {self.status}"
+
+
+class InsurancePolicy(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending Verification'),
+        ('VERIFIED', 'Verified'),
+        ('REJECTED', 'Rejected'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='insurance_policies')
+    provider_name = models.CharField(max_length=255)
+    policy_number = models.CharField(max_length=50)
+    coverage_limit = models.DecimalField(max_digits=12, decimal_places=2, help_text="Maximum coverage amount")
+    valid_until = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.provider_name} - {self.policy_number} ({self.status})"
+
+    def can_cover(self, amount):
+        return self.status == 'VERIFIED' and self.coverage_limit >= amount
+
+    def debit(self, amount):
+        if amount <= 0:
+            raise ValueError("Debit amount must be positive")
+        if not self.can_cover(amount):
+            return False
+        
+        self.coverage_limit -= amount
+        self.save()
+        return True
