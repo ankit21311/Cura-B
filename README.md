@@ -191,3 +191,4 @@ python manage.py createsuperuser
 
 This project is open-source and available under the simple [MIT License](LICENSE).
 "# Cura-B" 
+"# Cura-B" 
