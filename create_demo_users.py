@@ -21,6 +21,21 @@ def create_user(username, password, role, email=''):
     print(f"User {username} ({role}) ready.")
     return user
 
+
+def create_patient_user(username='test_patient', password='patient123', email='patient@example.com'):
+    user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+    user.set_password(password)
+    user.is_staff = False
+    user.is_superuser = False
+    user.save()
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile.role = 'PATIENT'
+    profile.save()
+
+    print(f"Patient user {username} ready.")
+    return user
+
 # 1. Pharmacy Admin
 pharm_user = create_user('pharmacy_admin', 'admin123', 'PHARMACY_ADMIN', 'pharmacy@example.com')
 pharmacy, _ = Pharmacy.objects.get_or_create(
@@ -69,8 +84,12 @@ admin_user.is_staff = True
 admin_user.save()
 print("Superuser 'admin' ready.")
 
+# 5. Patient Test User
+create_patient_user('test_patient', 'patient123', 'patient@example.com')
+
 print("\n--- DEMO ACCOUNTS ---")
 print("1. Pharmacy Admin: pharmacy_admin / admin123")
 print("2. Oxygen Supplier: oxygen_admin / admin123")
 print("3. Hospital Admin: hospital_admin / admin123")
 print("4. Super Admin: admin / admin123")
+print("5. Patient: test_patient / patient123")
