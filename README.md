@@ -132,6 +132,56 @@ hospital-system/
 └── requirements.txt        # Project dependencies
 ```
 
+<<<<<<< HEAD
+=======
+## ☁️ Deploy On Render
+
+This project is now configured for Render using the included [render.yaml](render.yaml).
+
+### 1. Push To GitHub
+
+Render deploys from your Git repository, so make sure this code is pushed to a branch.
+
+### 2. Create Blueprint Service
+
+1. In Render, click **New +** -> **Blueprint**.
+2. Connect your repository.
+3. Render auto-detects `render.yaml` and provisions:
+    - A Python web service (`curab-web`)
+    - A PostgreSQL database (`curab-db`)
+
+### 3. Environment Variables
+
+Configured automatically via `render.yaml`:
+
+- `SECRET_KEY` (auto-generated)
+- `DEBUG=False`
+- `DATABASE_URL` (from managed Postgres)
+
+Optional (set manually if needed):
+
+- `OPENAI_API_KEY`
+- `ALLOWED_HOSTS` (defaults to `*` unless overridden)
+- `CSRF_TRUSTED_ORIGINS` (comma-separated, e.g. `https://your-app.onrender.com`)
+
+### 4. Deploy
+
+On each deploy Render will:
+
+1. Install dependencies
+2. Run `collectstatic`
+3. Run `migrate`
+4. Start Gunicorn (`cura.wsgi:application`)
+
+### 5. First Admin User
+
+After deployment, create a superuser from the Render shell:
+
+```bash
+python manage.py createsuperuser
+```
+
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 ## 🤝 Contributing
 
 1.  Fork the project
@@ -143,3 +193,8 @@ hospital-system/
 ## 📄 License
 
 This project is open-source and available under the simple [MIT License](LICENSE).
+<<<<<<< HEAD
+=======
+"# Cura-B" 
+"# Cura-B" 
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0

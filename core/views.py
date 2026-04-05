@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import logging
+
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login, logout
@@ -49,6 +54,12 @@ from .models import (
 from decimal import Decimal
 
 
+<<<<<<< HEAD
+=======
+logger = logging.getLogger(__name__)
+
+
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -59,9 +70,23 @@ def register(request):
     if request.method == 'POST':
         form = PatientRegistrationForm(request.POST)
         if form.is_valid():
+<<<<<<< HEAD
             form.save()
             messages.success(request, 'Registration successful. Please log in.')
             return redirect('login')
+=======
+            try:
+                form.save()
+            except Exception:
+                logger.exception('Registration failed while creating a new user')
+                messages.error(
+                    request,
+                    'Registration is temporarily unavailable. Please try again in a minute.'
+                )
+            else:
+                messages.success(request, 'Registration successful. Please log in.')
+                return redirect('login')
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
     else:
         form = PatientRegistrationForm()
     return render(request, 'core/register.html', {'form': form})

@@ -1,5 +1,6 @@
 services:
   - type: web
+<<<<<<< HEAD
     name: cura
     runtime: python
     pythonVersion: 3.14
@@ -23,3 +24,25 @@ services:
         sync: false
       - key: ALLOWED_HOSTS
         value: .onrender.com
+=======
+    name: curab-web
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
+    startCommand: python manage.py migrate && gunicorn cura.wsgi:application
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: curab-db
+          property: connectionString
+
+databases:
+  - name: curab-db
+    plan: free
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0

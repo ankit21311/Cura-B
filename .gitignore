@@ -3,6 +3,7 @@ __pycache__/
 db.sqlite3
 .env
 venv/
+<<<<<<< HEAD
 
 # Python
 *.so
@@ -47,3 +48,5 @@ db.sqlite3-journal
 
 # Render
 .render/
+=======
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0

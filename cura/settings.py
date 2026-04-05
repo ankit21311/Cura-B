@@ -12,10 +12,16 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+<<<<<<< HEAD
 from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
+=======
+
+import dj_database_url
+from django.core.management.utils import get_random_secret_key
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,12 +33,27 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+<<<<<<< HEAD
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-+=3=_a=yo&ji$s86aw)g(a+^@z17mfd@b8jzas7+lm_t)hg#r7')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+=======
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    get_random_secret_key()
+)
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '*').split(',') if host.strip()]
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 
 
 # Application definition
@@ -83,6 +104,7 @@ WSGI_APPLICATION = 'cura.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+<<<<<<< HEAD
 import dj_database_url
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -98,6 +120,19 @@ if DATABASE_URL:
     }
 else:
     # Fallback to SQLite for local development without .env
+=======
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
+    }
+else:
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -140,9 +175,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+<<<<<<< HEAD
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+=======
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+WHITENOISE_USE_FINDERS = True
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -159,6 +202,7 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 CSRF_COOKIE_AGE = 1209600
 
+<<<<<<< HEAD
 # Production security settings for Render
 SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False') == 'True'
 SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
@@ -171,3 +215,20 @@ if os.environ.get('RENDER'):
     CSRF_TRUSTED_ORIGINS.extend([
         'https://*.onrender.com'
     ])
+=======
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True').lower() == 'true'
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True').lower() == 'true'
+    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'True').lower() == 'true'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0

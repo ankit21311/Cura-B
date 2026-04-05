@@ -160,6 +160,11 @@
   </footer>
 
   <!-- CURA Assistant Widget (site-wide, Django-backed) -->
+<<<<<<< HEAD
+=======
+  {% url 'assistant_home' as assistant_home_url %}
+  {% url 'assistant_api' as assistant_api_url %}
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
   <div class="assistant-widget" id="assistantWidget">
     <details class="assistant-panel" id="assistantPanel">
       <summary class="assistant-fab" aria-label="Open CURA Assistant">
@@ -178,7 +183,11 @@
             </div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
+<<<<<<< HEAD
             <a class="assistant-link" href="{% url 'assistant_home' %}">Open</a>
+=======
+            <a class="assistant-link" href="{% if assistant_home_url %}{{ assistant_home_url }}{% else %}#{% endif %}">Open</a>
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
             <button type="button" class="assistant-close-btn" id="assistantClose" aria-label="Close assistant">
               &times;
             </button>
@@ -268,7 +277,11 @@
         fd.append("message", text);
         let data = null;
         try {
+<<<<<<< HEAD
           const res = await fetch("{% url 'assistant_api' %}", {
+=======
+          const res = await fetch("{% if assistant_api_url %}{{ assistant_api_url }}{% else %}#{% endif %}", {
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
             method: "POST",
             headers: { "X-CSRFToken": getCookie("csrftoken") },
             body: fd,

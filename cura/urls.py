@@ -15,11 +15,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+<<<<<<< HEAD
 from django.urls import path, include
+=======
+from django.conf import settings
+from django.urls import path, include
+from django.views.static import serve
+from django.urls import re_path
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 from core.views import home
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
     path('core/', include('core.urls')),
+<<<<<<< HEAD
+=======
+    # Fallback static serving for platforms where collectstatic is skipped.
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.BASE_DIR / 'static'}),
+>>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 ]
