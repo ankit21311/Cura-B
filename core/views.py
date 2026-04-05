@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-import logging
-
->>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login, logout
@@ -52,14 +47,9 @@ from .models import (
     InsurancePolicy,
 )
 from decimal import Decimal
+from django.conf import settings
 
 
-<<<<<<< HEAD
-=======
-logger = logging.getLogger(__name__)
-
-
->>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
 def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -70,44 +60,14 @@ def register(request):
     if request.method == 'POST':
         form = PatientRegistrationForm(request.POST)
         if form.is_valid():
-<<<<<<< HEAD
             form.save()
             messages.success(request, 'Registration successful. Please log in.')
             return redirect('login')
-=======
-            try:
-                form.save()
-            except Exception:
-                logger.exception('Registration failed while creating a new user')
-                messages.error(
-                    request,
-                    'Registration is temporarily unavailable. Please try again in a minute.'
-                )
-            else:
-                messages.success(request, 'Registration successful. Please log in.')
-                return redirect('login')
->>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
     else:
         form = PatientRegistrationForm()
     return render(request, 'core/register.html', {'form': form})
 
-"""
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            messages.error(request, 'Invalid credentials')
 
-        
-    return render(request, 'core/login.html')
-"""
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -261,21 +221,6 @@ def patient_dashboard(request):
     })
 
 
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def create_doctor(request):
-    if request.method == 'POST':
-        form = DoctorForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Doctor created successfully')
-            return redirect('manage_doctors')
-    else:
-        form = DoctorForm()
-
-    return render(request, 'core/manage/doctor_form.html', {'form': form})
-
 @login_required
 @user_passes_test(is_super_admin)
 @require_POST
@@ -317,7 +262,7 @@ def admin_update_medicine_order_status(request, pk):
                 if item.quantity > item.medicine.stock:
                     all_available = False
                     break
-            
+
             if all_available:
                 for item in order.items.all():
                     item.medicine.stock -= item.quantity
@@ -347,7 +292,7 @@ def admin_update_oxygen_booking_status(request, pk):
         old_status = booking.status
         booking.status = status
         booking.save()
-        
+
         # If approved, reduce available cylinders
         if status == 'CONFIRMED' and old_status != 'CONFIRMED':
             stock = booking.stock
@@ -501,7 +446,6 @@ def hospital_detail(request, pk):
 
 
 @login_required
-@login_required
 @role_required(['PATIENT'])
 def bed_booking_create(request, bed_id):
     bed = get_object_or_404(HospitalBed, id=bed_id)
@@ -519,17 +463,10 @@ def bed_booking_create(request, bed_id):
             booking.save()
             return redirect('bed_booking_payment', booking_id=booking.id)
         else:
-            # If form errors, redirect back to modal (or show error efficiently)
-            # For simplicity in this modal flow, we might need to render a dedicated page or pass errors.
-            # But the user asked for a modal. If modal submission fails, standard practice is to return errors.
-            # Since the modal is on hospital_detail, we might need to handle this gracefully.
-            # For now, let's render a standalone page if it fails, or re-render hospital detail with the form errors.
             messages.error(request, 'Please correct the errors in the form.')
     else:
         form = BedBookingUploadForm()
-    
-    # If not POST, we shouldn't really be here unless someone hit the URL directly.
-    # But the modal will POST here.
+
     return render(request, 'core/hospitals/bed_booking_form.html', {
         'bed': bed,
         'form': form,
@@ -540,7 +477,7 @@ def bed_booking_create(request, bed_id):
 @role_required(['PATIENT'])
 def bed_booking_payment(request, booking_id):
     booking = get_object_or_404(BedBooking, id=booking_id, patient=request.user)
-    
+
     if booking.status != 'AWAITING_PAYMENT':
         messages.info(request, 'This booking has already been processed.')
         return redirect('patient_dashboard')
@@ -555,18 +492,18 @@ def bed_booking_payment(request, booking_id):
         if form.is_valid():
             final_booking = form.save(commit=False)
             payment_option = final_booking.payment_option
-            
+
             # Payment Processing
             if payment_option == 'INSURANCE':
                 verified_policy = request.user.insurance_policies.filter(status='VERIFIED', valid_until__gte=timezone.now().date()).first()
                 if not verified_policy:
                     messages.error(request, 'No active verified insurance policy found.')
                     return redirect('manage_insurance')
-                
+
                 if not verified_policy.debit(price):
                     messages.error(request, f'Insufficient insurance coverage. Limit exceeded. Price: {price}')
                     return redirect('bed_booking_payment', booking_id=booking.id)
-                    
+
             elif payment_option == 'WALLET':
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
                 if not wallet.debit(price, content_object=booking):
@@ -575,7 +512,7 @@ def bed_booking_payment(request, booking_id):
 
             final_booking.status = 'PENDING' # Now wait for Admin
             final_booking.save()
-            
+
             Notification.objects.create(
                 user=request.user,
                 message=f'Bed booking request for {bed.get_bed_type_display()} at {bed.hospital.name} submitted. Prescription uploaded.',
@@ -604,7 +541,7 @@ def admin_update_bed_booking_status(request, pk):
         old_status = booking.status
         booking.status = status
         booking.save()
-        
+
         # If approved, reduce available beds
         if status == 'CONFIRMED' and old_status != 'CONFIRMED':
             bed = booking.hospital_bed
@@ -656,7 +593,7 @@ def book_appointment(request, doctor_id):
         if form.is_valid():
             appointment = form.save(commit=False)
             fee = doctor.fees
-            
+
             # 1. Verification (Pre-save)
             if appointment.payment_option == 'WALLET':
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
@@ -721,7 +658,7 @@ def oxygen_booking_create(request, stock_id):
         form = OxygenBookingForm(request.POST)
         if form.is_valid():
             booking = form.save(commit=False)
-            
+
             # Determine price
             price = stock.price_per_cylinder * booking.quantity
 
@@ -731,7 +668,7 @@ def oxygen_booking_create(request, stock_id):
                 if not verified_policy:
                     messages.error(request, 'No active verified insurance policy found.')
                     return redirect('manage_insurance')
-                
+
                 if not verified_policy.debit(price):
                     messages.error(request, f'Insufficient insurance coverage. Price: {price}')
                     return redirect('oxygen_list')
@@ -757,7 +694,7 @@ def oxygen_booking_create(request, stock_id):
                 return redirect('patient_dashboard')
     else:
         form = OxygenBookingForm()
-        
+
     verified_policy = request.user.insurance_policies.filter(status='VERIFIED', valid_until__gte=timezone.now().date()).first()
 
     return render(request, 'core/oxygen/oxygen_booking_form.html', {
@@ -816,9 +753,6 @@ def medicine_order_create(request, medicine_id):
                     quantity=quantity,
                     price_at_order=medicine.price,
                 )
-                # Removed immediate stock deduction
-                # medicine.stock -= quantity
-                # medicine.save()
                 Notification.objects.create(
                     user=request.user,
                     message=f'Medicine order #{order.id} created.',
@@ -974,16 +908,13 @@ def cart_checkout(request):
                 if not verified_policy:
                     messages.error(request, 'No active verified insurance policy found.')
                     return redirect('cart_detail')
-                
+
                 if not verified_policy.debit(total_amount):
                     messages.error(request, f'Insufficient insurance coverage for medicine order. Total: {total_amount}')
                     return redirect('cart_detail')
-            
+
             elif payment_method == 'WALLET':
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
-                # Create a temporary/placeholder order or generic transaction for the whole cart?
-                # Ideally we link to the Order(s), but we have multiple orders.
-                # Let's link to the Cart for now or just generic.
                 if not wallet.debit(total_amount):
                      messages.error(request, f'Insufficient wallet balance. Total: {total_amount}')
                      return redirect('wallet_dashboard')
@@ -1020,9 +951,6 @@ def cart_checkout(request):
                         quantity=item.quantity,
                         price_at_order=medicine.price,
                     )
-                    # Removed immediate stock deduction
-                    # medicine.stock -= item.quantity
-                    # medicine.save()
                 orders_created.append(order)
 
             # Clear cart
@@ -1129,8 +1057,6 @@ def _assistant_live_stats(user):
     return stats
 
 
-from django.conf import settings
-
 @csrf_exempt
 @require_POST
 def assistant_api(request):
@@ -1149,10 +1075,10 @@ def assistant_api(request):
 
     # Fallback/Default suggestions
     default_suggestions = ["Show live stats", "How do I book?", "Emergency contacts", "Oxygen availability"]
-    
+
     # Check for API Key
     api_key = getattr(settings, 'OPENAI_API_KEY', None)
-    
+
     if not api_key:
         # Fallback to simple static logic if no key
         return _static_assistant_reply(request, message)
@@ -1162,7 +1088,7 @@ def assistant_api(request):
         # 1. Get Live Context
         stats = _assistant_live_stats(request.user)
         user_context = f"User: {request.user.username}" if request.user.is_authenticated else "User: Guest"
-        
+
         # 2. Construct System Prompt
         system_prompt = (
             "You are the CURA Assistant, an AI for a hospital resource platform. "
@@ -1187,9 +1113,9 @@ def assistant_api(request):
             max_tokens=150,
             temperature=0.7,
         )
-        
+
         reply_text = completion.choices[0].message.content.strip()
-        
+
         return JsonResponse({
             "reply": reply_text,
             "suggestions": default_suggestions,
@@ -1240,7 +1166,7 @@ def _static_assistant_reply(request, message):
     if any(k in msg for k in ["doctor", "appointment", "book a doctor", "book doctor"]):
         return reply(
             "To book a doctor: open Resources → Doctors, filter by city/speciality, open a doctor profile, then choose a slot to book.\n"
-            "After booking, you’ll see it on your Dashboard and in Notifications."
+            "After booking, you'll see it on your Dashboard and in Notifications."
         , suggestions=["Search doctors", "View dashboard", "Show live stats"])
 
     if any(k in msg for k in ["hospital", "beds", "bed", "icu"]):
@@ -1258,19 +1184,19 @@ def _static_assistant_reply(request, message):
     if any(k in msg for k in ["medicine", "medicines", "pharmacy", "order"]):
         return reply(
             "To order medicines: open Resources → Medicines, filter by name/city, then place an order.\n"
-            "Stock reduces when you order; you’ll get a notification update."
+            "Stock reduces when you order; you'll get a notification update."
         , suggestions=["Medicines", "View dashboard", "Show live stats"])
 
     if any(k in msg for k in ["emergency", "ambulance", "112", "108", "police", "fire"]):
         return reply(
             "If this is an emergency, call the official numbers immediately:\n"
             "- National Emergency: 112\n- Ambulance: 102 / 108\n- Fire: 101\n- Police: 100\n"
-            "Then use Emergency page → “Submit Support Request” for assistance and tracking inside CURA."
+            'Then use Emergency page -> "Submit Support Request" for assistance and tracking inside CURA.'
         , suggestions=["Open Emergency page", "Submit support request", "Show live stats"])
 
     # Fallback
     return reply(
-        "I can guide you through CURA. Try asking about: hospital beds, booking doctors, medicines, oxygen, notifications, or type “stats”."
+        'I can guide you through CURA. Try asking about: hospital beds, booking doctors, medicines, oxygen, notifications, or type "stats".'
     )
 
 
@@ -1324,24 +1250,24 @@ def verify_policy(policy_number):
 @role_required(['PATIENT'])
 def manage_insurance(request):
     policies = request.user.insurance_policies.order_by('-created_at')
-    
+
     if request.method == 'POST':
         form = InsurancePolicyForm(request.POST)
         if form.is_valid():
             policy = form.save(commit=False)
             policy.user = request.user
-            
+
             # Verify Policy
             is_valid = verify_policy(policy.policy_number)
             policy.status = 'VERIFIED' if is_valid else 'REJECTED'
-            
+
             policy.save()
-            
+
             if is_valid:
                 messages.success(request, 'Insurance policy verified and added successfully.')
             else:
                 messages.error(request, 'Insurance verification failed. Policy rejected.')
-                
+
             return redirect('manage_insurance')
     else:
         form = InsurancePolicyForm()
@@ -1374,10 +1300,10 @@ def purchase_history(request):
     if not filter_type or filter_type == 'medicine':
         orders = MedicineOrder.objects.filter(patient=request.user).order_by('-created_at')
         add_items(
-            orders, 
-            'Medicine Order', 
-            lambda x: f"Order #{x.id} ({x.items.count()} items)", 
-            lambda x: sum(i.price_at_order * i.quantity for i in x.items.all()), 
+            orders,
+            'Medicine Order',
+            lambda x: f"Order #{x.id} ({x.items.count()} items)",
+            lambda x: sum(i.price_at_order * i.quantity for i in x.items.all()),
             lambda x: 'Wallet/Insurance'
         )
 
@@ -1463,7 +1389,7 @@ def add_medicine(request):
             return redirect('manage_medicines')
     else:
         form = MedicineForm()
-    
+
     return render(request, 'core/medicines/medicine_form.html', {'form': form, 'title': 'Add Medicine'})
 
 @login_required
@@ -1511,7 +1437,7 @@ def add_oxygen_stock(request):
             return redirect('manage_oxygen')
     else:
         form = OxygenStockForm()
-    
+
     return render(request, 'core/oxygen/oxygen_stock_form.html', {'form': form, 'title': 'Add Oxygen Stock'})
 
 @login_required
@@ -1548,7 +1474,7 @@ def edit_bed_stock(request, pk):
             return redirect('manage_beds')
         except (ValueError, TypeError):
             messages.error(request, 'Invalid bed count.')
-    
+
     return render(request, 'core/hospitals/edit_bed_stock.html', {'bed': bed})
 
 
@@ -1573,9 +1499,9 @@ def admin_add_oxygen(request):
             return redirect('admin_manage_oxygen')
     else:
         form = AdminOxygenStockForm()
-    
+
     return render(request, 'core/manage/admin_oxygen_form.html', {
-        'form': form, 
+        'form': form,
         'title': 'Add Oxygen Stock (Admin)'
     })
 
@@ -1591,9 +1517,9 @@ def admin_edit_oxygen_stock(request, pk):
             return redirect('admin_manage_oxygen')
     else:
         form = AdminOxygenStockForm(instance=stock)
-    
+
     return render(request, 'core/manage/admin_oxygen_form.html', {
-        'form': form, 
+        'form': form,
         'title': 'Edit Oxygen Stock (Admin)'
     })
 
@@ -1628,9 +1554,9 @@ def admin_add_bed(request):
             return redirect('admin_manage_beds')
     else:
         form = AdminHospitalBedForm()
-    
+
     return render(request, 'core/manage/admin_bed_form.html', {
-        'form': form, 
+        'form': form,
         'title': 'Add Hospital Bed (Admin)'
     })
 
@@ -1646,9 +1572,9 @@ def admin_edit_bed_admin(request, pk):
             return redirect('admin_manage_beds')
     else:
         form = AdminHospitalBedForm(instance=bed)
-    
+
     return render(request, 'core/manage/admin_bed_form.html', {
-        'form': form, 
+        'form': form,
         'title': 'Edit Hospital Bed (Admin)'
     })
 

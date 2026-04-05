@@ -1,35 +1,11 @@
 services:
   - type: web
-<<<<<<< HEAD
-    name: cura
-    runtime: python
-    pythonVersion: 3.14
-    buildCommand: ./build.sh
-    startCommand: gunicorn cura.wsgi:application --bind 0.0.0.0:$PORT
-    envVars:
-      - key: DEBUG
-        value: false
-      - key: SECURE_SSL_REDIRECT
-        value: true
-      - key: SESSION_COOKIE_SECURE
-        value: true
-      - key: CSRF_COOKIE_SECURE
-        value: true
-      - key: SECRET_KEY
-        generateValue: true
-      - key: DATABASE_URL
-        scope: shared-db
-      - key: OPENAI_API_KEY
-        scope: env_specific
-        sync: false
-      - key: ALLOWED_HOSTS
-        value: .onrender.com
-=======
     name: curab-web
     runtime: python
+    pythonVersion: 3.12
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
-    startCommand: python manage.py migrate && gunicorn cura.wsgi:application
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn cura.wsgi:application
     envVars:
       - key: SECRET_KEY
         generateValue: true
@@ -45,4 +21,3 @@ services:
 databases:
   - name: curab-db
     plan: free
->>>>>>> ace957e61389140a650be7d1ed8d65cf978084f0
