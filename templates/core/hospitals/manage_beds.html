@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Manage Hospital Beds</h1>
+
+<div class="glass-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Hospital</th>
+                <th>Bed Type</th>
+                <th>Total Capacity</th>
+                <th>Available</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for bed in beds %}
+            <tr>
+                <td><strong>{{ bed.hospital.name }}</strong><br><small>{{ bed.hospital.city }}</small></td>
+                <td>{{ bed.get_bed_type_display }}</td>
+                <td>{{ bed.total_beds }}</td>
+                <td>
+                    <span class="badge {% if bed.available_beds > 0 %}success{% else %}danger{% endif %}">{{
+                        bed.available_beds }}</span>
+                </td>
+                <td>
+                    <a href="{% url 'edit_bed_stock' bed.id %}" class="btn btn-outline btn-sm">Update Stock</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No hospital beds found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

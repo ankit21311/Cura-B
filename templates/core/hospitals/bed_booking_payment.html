@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-padded">
+            <h2 class="section-title">Complete Your Booking</h2>
+            <div class="alert alert-info">
+                <strong>Step 2 of 2:</strong> Prescription uploaded successfully. Please select a payment method.
+            </div>
+
+            <div class="resource-meta" style="margin-bottom: 20px;">
+                <span class="badge">Items: {{ booking.hospital_bed.get_bed_type_display }} Bed</span>
+                <span class="badge">Date: {{ booking.booking_date }}</span>
+                <span class="badge">Price: ₹{{ price }}</span>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Payment Option</label>
+                    {{ form.payment_option }}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">Confirm Booking</button>
+                    <a href="{% url 'hospital_detail' booking.hospital_bed.hospital.id %}"
+                        class="btn btn-ghost">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

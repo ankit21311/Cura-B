@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: cura
+    runtime: python
+    pythonVersion: 3.14
+    buildCommand: ./build.sh
+    startCommand: gunicorn cura.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DEBUG
+        value: false
+      - key: SECURE_SSL_REDIRECT
+        value: true
+      - key: SESSION_COOKIE_SECURE
+        value: true
+      - key: CSRF_COOKIE_SECURE
+        value: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        scope: shared-db
+      - key: OPENAI_API_KEY
+        scope: env_specific
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: .onrender.com

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-overlay">
+    <div class="auth-card" style="max-width: 500px;">
+        <h2>Book a {{ bed.get_bed_type_display }} Bed</h2>
+        <p class="auth-subtitle">at {{ bed.hospital.name }}</p>
+
+        <div class="card card-muted" style="margin-bottom: 20px;">
+            <p><strong>Location:</strong> {{ bed.hospital.address }}, {{ bed.hospital.city }}</p>
+            <p><strong>Available Beds:</strong> {{ bed.available_beds }}</p>
+        </div>
+
+        {% if verified_policy %}
+        <div
+            style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 20px; color: var(--success-text); font-size: 14px;">
+            <strong>✅ Cashless Eligible</strong><br>
+            Link your <b>{{ verified_policy.provider_name }}</b> policy ({{ verified_policy.policy_number }}) by
+            selecting "Insurance / TPA" below.
+        </div>
+        {% endif %}
+
+        <form method="post" class="form auth-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary auth-btn">Confirm Booking Request</button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'hospital_detail' bed.hospital.id %}">Back to Hospital Details</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

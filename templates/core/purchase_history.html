@@ -1,0 +1,72 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="dashboard-hero">
+    <div class="dashboard-hero-main">
+        <h2>
+            {% if filter_type == 'appointment' %}Doctor Appointments
+            {% elif filter_type == 'medicine' %}Medicine Orders
+            {% elif filter_type == 'oxygen' %}Oxygen Bookings
+            {% elif filter_type == 'bed' %}Bed Bookings
+            {% else %}Purchase History{% endif %}
+        </h2>
+        <p class="dashboard-hero-subtitle">
+            {% if filter_type %}
+            Showing all your {{ filter_type }} history
+            {% else %}
+            Track all your medical expenses and bookings
+            {% endif %}
+        </p>
+    </div>
+    <div class="dashboard-hero-main" style="text-align:right;">
+        <a href="{% url 'purchase_history' %}?clear=1" class="btn btn-outline btn-small">Hide existing history</a>
+    </div>
+</div>
+
+<div class="dash-card">
+    {% if history %}
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                <th style="padding: 12px;">Date</th>
+                <th style="padding: 12px;">Type</th>
+                <th style="padding: 12px;">Details</th>
+                <th style="padding: 12px;">Amount</th>
+                <th style="padding: 12px;">Payment</th>
+                <th style="padding: 12px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in history %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 12px; color: #94a3b8;">{{ item.date|date:"M d, Y" }}</td>
+                <td style="padding: 12px; font-weight: 500;">{{ item.type }}</td>
+                <td style="padding: 12px;">{{ item.details }}</td>
+                <td style="padding: 12px;">₹{{ item.price }}</td>
+                <td style="padding: 12px;">
+                    <span class="badge"
+                        style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                        {{ item.payment }}
+                    </span>
+                </td>
+                <td style="padding: 12px;">
+                    <span class="pill-status" style="
+            {% if item.status == 'Confirmed' or item.status == 'Delivered' or item.status == 'Verified' %}color: var(--success-text); background: var(--success-bg); border-color: rgba(34,197,94,0.3);{% endif %}
+            {% if item.status == 'Pending' %}color: var(--warning-text); background: var(--warning-bg); border-color: rgba(234,179,8,0.3);{% endif %}
+            {% if item.status == 'Cancelled' or item.status == 'Rejected' %}color: var(--danger-text); background: var(--danger-bg); border-color: rgba(239,68,68,0.3);{% endif %}
+          ">
+                        {{ item.status }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #94a3b8;">
+        <p>No purchases found yet.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary" style="margin-top: 10px;">Go to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
